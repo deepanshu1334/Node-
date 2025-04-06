@@ -1,0 +1,1634 @@
+piplines
+
+
+pipeline {
+    agent any
+
+  tools {
+    maven 'Maven-3.8.7'  // Ensure this matches Jenkins' configuration
+}
+
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'master', url: 'https://github.com/ashokitschool/maven-web-app.git'
+            }
+        }
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean package'  // Runs the Maven build process
+            }
+        }
+        stage('Building docker images'){
+            steps{
+                sh 'docker build -t my-web-app .'
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8000:8000 my-web-app'
+            }
+        }
+    }
+}
+
+- error in build stage as docker file some file msiing in project
+
+pipeline_2 
+
+
+pipeline{
+    agent any
+        stages{
+            stage('clone'){
+                steps{
+                    sh '''
+                    echo "git clone"
+                    echo "clone this repo"
+                    ls -l 
+                    '''
+                }
+            }
+            stage('Build'){
+                steps{
+                  sh 'docker pull hello-world'
+                }
+            }
+            stage('Deployment'){
+                steps{
+                    sh 'docker run hello-world'
+                }
+            }
+        }
+    
+}
+
+
+
+
+
+piepline_3
+
+pipeline{
+    agent any
+        stages{
+            stage('clone'){
+                steps{
+                      git branch: 'main', url: 'https://github.com/deepanshu1334/Django_Image_Uploader_Project.git'
+                }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker pull nginx'
+            }
+        }
+        stage('Deploy'){
+            steps{
+                sh 'docker run -d -p 8081:80 nginx'
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+pipeline_4
+
+pipeline {
+    agent any
+    stages {
+        stage('clean ws'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/Django_Image_Uploader_Project.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'docker pull nginx'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'docker run --rm nginx nginx -v'  // Runs a test to check the Nginx version
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'docker run -d -p 8084:80 nginx'
+            }
+        }
+        stage('Verify') {
+            steps {
+                sh 'curl -I http://localhost:8084'  // Checks if Nginx is running successfully
+            }
+        }
+    }
+}
+
+
+
+
+
+pipeline_5
+
+
+pipeline {
+    agent any
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/Django_Image_Uploader_Project.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'docker pull nginx'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'docker run --rm nginx nginx -v'  // Runs a test to check the Nginx version
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker stop nginx_container || true
+                docker rm nginx_container || true
+                docker run -d --name nginx_container -p 8085:80 nginx
+                '''
+            }
+        }
+        stage('Verify') {
+            steps {
+                sh '''
+                sleep 5
+                docker ps | grep nginx_container
+                curl -I http://localhost:8085
+                '''
+            }
+        }
+    }
+}
+
+pipeline_4 - iii
+
+
+pipeline {
+    agent any
+    environment {
+        CONTAINER_NAME = 'nginx_container'
+        PORT = '8088'
+        IMAGE_NAME = 'nginx'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/Django_Image_Uploader_Project.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "docker pull ${IMAGE_NAME}"
+            }
+        }
+        stage('Test') {
+            steps {
+                sh "docker run --rm ${IMAGE_NAME} nginx -v"  // Check Nginx version
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker run -d --name $CONTAINER_NAME -p $PORT:80 $IMAGE_NAME
+                '''
+            }
+        }
+        stage('Verify') {
+            steps {
+                sh '''
+                sleep 30
+                docker inspect -f '{{.State.Running}}' $CONTAINER_NAME || exit 1
+                curl -I http://localhost:$PORT
+                '''
+            }
+        }
+    }
+}
+
+
+pipeline_4- iv
+
+
+
+pipeline {
+    agent any
+    environment {
+        CONTAINER_NAME = 'nginx_container'
+        PORT = '8088'
+        IMAGE_NAME = 'nginx'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/Django_Image_Uploader_Project.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "docker pull ${IMAGE_NAME}"
+            }
+        }
+        stage('Test') {
+            steps {
+                sh "docker run --rm ${IMAGE_NAME} nginx -v"  // Check Nginx version
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker run -d --name $CONTAINER_NAME -p $PORT:80 $IMAGE_NAME
+                '''
+            }
+        }
+        stage('Verify') {
+    steps {
+        sh '''
+        sleep 20  # Give more time for the container to start
+        docker inspect -f '{{.State.Running}}' $CONTAINER_NAME || exit 1
+        curl -I http://host.docker.internal:$PORT || (echo "Error: Unable to reach container" && exit 1)
+        '''
+    }
+}
+
+    }
+}
+
+
+
+
+
+
+
+pipeline_5
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    
+    stages{
+        stage('Workpsace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('clone'){
+            steps{
+                 git branch: 'main',url: 'https://github.com/deepanshu1334/node-docker-app.git'
+            }
+        }
+        stage('Package'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker build -t my-img .'
+            }
+        }
+    }
+}
+
+
+
+II
+
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+
+    stages {
+        stage('Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/node-docker-app.git'
+            }
+        }
+        stage('Package') {
+            steps {
+                dir('node-docker-app') { // Change to correct subdirectory
+                    sh 'mvn clean package'
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                dir('node-docker-app') { // Change to correct subdirectory
+                    sh 'docker build -t my-img .'
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+pipline- 6
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    stages{
+        stage('workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('clone'){
+            steps{
+                git branch: 'main',url: 'https://github.com/deepanshu1334/blog-app.git'
+            }
+        }
+        stage('package'){
+            steps{
+                sh 'mvn clean package'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker build -t my-img .'
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8085:82 my-img'
+            }
+        }
+    }
+}
+
+
+
+
+pipeline_6 - II
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    stages{
+        stage('workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('clone'){
+            steps{
+                git branch: 'main',url: 'https://github.com/deepanshu1334/blog-app.git'
+            }
+        }
+        stage('package'){
+            steps{
+                sh 'mvn clean package'
+                sh 'ls -lh target/'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker build -t my-img .'
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8085:82 my-img'
+            }
+        }
+    }
+}
+
+
+pipeline_6- III
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    stages{
+        stage('workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('clone'){
+            steps{
+                git branch: 'main',url: 'https://github.com/deepanshu1334/blog-app.git'
+            }
+        }
+        stage('package'){
+            steps{
+                withMaven(maven: 'Maven-3.8.7'){
+                    sh 'mvn clean package'
+                }
+                sh 'ls -lh'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker pull tomcat:10.0.27 '
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p '
+            }
+        }
+    }
+}
+
+
+
+
+pipeline - 6 -iii
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+    environment {
+        DOCKER_IMAGE = 'tomcat:10.0.27'
+        CONTAINER_NAME = 'my-tomcat-container'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/blog-app.git'
+            }
+        }
+        stage('Build & Package') {
+            steps {
+                withMaven(maven: 'Maven-3.8.7') {
+                    sh 'mvn clean package'
+                }
+                sh 'ls -lh target'
+            }
+        }
+        stage('Pull Docker Image') {
+            steps {
+                sh 'docker pull ${DOCKER_IMAGE}'
+            }
+        }
+        stage('Deploy Application') {
+            steps {
+                // sh 'sudo docker stop ${CONTAINER_NAME} || true'
+                // sh 'sudo docker rm ${CONTAINER_NAME} || true'
+                // sh '''
+                // sudo docker run -d -p 8080:8080 --name ${CONTAINER_NAME} \
+                // -v $WORKSPACE/target/blog.war:/usr/local/tomcat/webapps/blog.war \
+                // ${DOCKER_IMAGE}
+                sh 'docker run -d -p 8082:81 ${DOCKER_IMAGE}'
+                '''
+            }
+        }
+    }
+}
+
+
+
+
+
+
+pipeline_6-iV
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+    environment {
+        DOCKER_IMAGE = 'tomcat:10.0.27'
+        CONTAINER_NAME = 'my-tomcat-container'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/blog-app.git'
+            }
+        }
+        stage('Build & Package') {
+            steps {
+                withMaven(maven: 'Maven-3.8.7') {
+                    sh 'mvn clean package'
+                }
+                sh 'ls -lh target'
+            }
+        }
+        stage('Pull Docker Image') {
+            steps {
+                sh 'docker pull ${DOCKER_IMAGE}'
+            }
+        }
+        stage('Deploy Application') {
+            steps {
+                sh '''
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+                docker run -d -p 8082:8080 --name ${CONTAINER_NAME} \
+                -v $WORKSPACE/target/blog.war:/usr/local/tomcat/webapps/blog.war \
+                ${DOCKER_IMAGE}
+                '''
+            }
+        }
+    }
+}
+
+
+
+
+
+
+Pipeline-7
+
+
+ 
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    environment{
+        Docker_Image = 'nginx'
+        DOcker_CONTAINER = 'my-Nginx-Container'
+    }
+    stages{
+        stage('Workspaces'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('files'){
+            steps{
+                sh 'ls -lh'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'docker pull ${Docker_Image}'
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8081:80 ${Docker_Image}'
+                sh 'docker ps'
+            
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    environment{
+        Docker_Image = 'nginx'
+        DOcker_CONTAINER = 'my-Nginx-Container'
+    }
+    stages{
+        stage('Workspaces'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('files'){
+            steps{
+                sh 'ls -lh'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'docker pull ${Docker_Image}'
+            }
+        }
+         stage('Deployment') {
+          steps {
+        sh '''
+        docker stop ${DOcker_CONTAINER} || true
+        docker rm ${DOcker_CONTAINER} || true
+        docker run -d -p 8085:80 --name ${DOcker_CONTAINER} ${Docker_Image}
+        '''
+    }
+}
+
+    }
+}
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+    environment {
+        DOCKER_IMAGE = 'nginx'
+        DOCKER_CONTAINER = 'my-Nginx-Container'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Check Files') {
+            steps {
+                sh 'ls -lh'
+            }
+        }
+
+        stage('Pull Docker Image') {
+            steps {
+                sh 'docker pull ${DOCKER_IMAGE}'
+            }
+        }
+
+        stage('Deploy Nginx') {
+            steps {
+                script {
+                    // Stop and remove the previous container if it exists
+                    sh 'docker stop ${DOCKER_CONTAINER} || true'
+                    sh 'docker rm ${DOCKER_CONTAINER} || true'
+
+                    // Run new Nginx container
+                    sh '''
+                    docker run -d -p 8082:80 --name ${DOCKER_CONTAINER} ${DOCKER_IMAGE}
+                    docker ps
+                    '''
+                }
+            }
+        }
+    }
+}
+
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+    environment {
+        DOCKER_IMAGE = 'nginx'
+        DOCKER_CONTAINER = 'my-Nginx-Container'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Check Files') {
+            steps {
+                sh 'ls -lh'
+            }
+        }
+
+        stage('Pull Docker Image') {
+            steps {
+                sh 'docker pull ${DOCKER_IMAGE}'
+            }
+        }
+
+        stage('Deploy Nginx') {
+            steps {
+                sh 'kubectl run ${Docker_Image}'
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+pipeline_8
+
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    environment{
+        DOCKER_IMAGE = 'nginx'
+        DOCKER_CONTAINER = 'my-nginx-container'
+    }
+    stages{
+        stage('Workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('list'){
+            steps{
+                sh 'ls -lh'
+            }
+        }
+        stage('Build'){
+            steps{
+              sh 'docker pull ${DOCKER_IMAGE}'   
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8087:80 --name ${DOCKER_CONTAINER} ${DOCKER_IMAGE}'
+            }
+        }
+    }
+}
+
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    environment{
+        DOCKER_IMAGE = 'nginx'
+        DOCKER_CONTAINER = 'my-nginx-container'
+    }
+    stages{
+        stage('Workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('List Files'){
+            steps{
+                sh 'ls -lh'
+            }
+        }
+        stage('Build'){
+            steps{
+              sh 'docker pull ${DOCKER_IMAGE}'   
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker run -d -p 8088:80 --name ${DOCKER_CONTAINER} ${DOCKER_IMAGE}'
+            }
+        }
+        stage('Test'){
+            steps{
+                script {
+                    def response = sh(script: 'curl -o /dev/null -s -w "%{http_code}" http://localhost:8088', returnStdout: true).trim()
+                    if (response != '200') {
+                        error("Nginx is not responding properly. HTTP Status: ${response}")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+pipeline_10
+
+
+pipeline{
+    agent any
+    tools{
+        maven 'Maven-3.8.7'
+    }
+    environment{
+        DOCKER_IMAGE = 'node'
+        DOCKER_CONTAINER = 'my-angular-container'
+    }
+    stages{
+        stage('workpsace'){
+            steps{
+                cleanWs()
+            }
+        }
+    stage('clone'){
+            steps{
+                git branch: 'main',url: 'https://github.com/deepanshu1334/Angular_Deploy_to_aws.git'
+            }
+        }
+        stage('Files'){
+            steps{
+                sh 'ls -lh'
+            }
+        }
+        stage('Build'){
+            steps{
+                sh 'docker-compose up --build -d'
+            }
+        }
+        stage('Deployment'){
+            steps{
+                sh 'docker compose up -d'
+            
+            }
+        }
+    }
+}
+
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+    }
+    environment {
+        DOCKER_IMAGE = 'node'
+        DOCKER_CONTAINER = 'my-angular-container'
+    }
+    stages {
+        stage('Workspace Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/Angular_Deploy_to_aws.git'
+            }
+        }
+        stage('List Files') {
+            steps {
+                sh 'ls -lh'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'docker-compose up --build -d'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh '''
+                   npm install
+                   npm test
+                '''
+            }
+        }
+        stage('Deployment') {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
+    }
+}
+
+Pipeline_11-sample pipeline - not tested just stages
+
+pipeline{
+    agent any
+    tools{
+        node 'NODEJS-18'
+    }
+    stages{
+        stage('workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('clone'){
+            steps{
+                git branch: '',url: ''
+            }
+        }
+    }
+    stage('Build'){
+        steps{
+            sh 'docker build -t my-img .'
+        }
+    }
+    stage('Test'){
+        steps{
+            sh '''
+            npm i 
+            npm test
+            '''
+        }
+    }
+    stage('Deployment'){
+        steps{
+            // sh 'docker run -d -p 8080:80 my=img'
+            sh 'Kubectl apply -f k8s-deployment.yml'
+        }
+    }
+}
+
+
+pipeline_2
+
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'NodeJS-18'  // Ensure Node.js is available
+    }
+
+    environment {
+        DOCKER_IMAGE = 'my-img'
+        DOCKERHUB_USER = 'deepanshu12353'
+        DOCKER_REGISTRY = 'docker.io'
+        KUBE_CONFIG = credentials('kubeconfig-cred')  // Add Kubernetes credentials
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Clone Repository') {
+            steps {
+                git branch: '', url: ''
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                sh 'npm audit --production'
+            }
+        }
+
+        stage('Lint & Code Quality Check') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+            }
+        }
+
+        stage('Unit & Integration Tests') {
+            steps {
+                sh '''
+                npm i 
+                npm test
+                '''
+            }
+        }
+
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([string(credentialsId: 'dockerhub-password', variable: 'DOCKERHUB_PASS')]) {
+                    sh 'echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin'
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh '''
+                docker tag ${DOCKER_IMAGE} ${DOCKER_REGISTRY}/${DOCKERHUB_USER}/${DOCKER_IMAGE}:latest
+                docker push ${DOCKER_REGISTRY}/${DOCKERHUB_USER}/${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Kubernetes Deployment') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig-cred']) {
+                    sh 'kubectl apply -f k8s-deployment.yml'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build and Deployment Successful!'
+            sh 'docker logout'
+            emailext (
+                subject: 'Jenkins Build Success: ${JOB_NAME}',
+                body: 'The Jenkins build ${BUILD_NUMBER} for ${JOB_NAME} was successful.',
+                to: 'your-email@example.com'
+            )
+        }
+
+        failure {
+            echo '❌ Build Failed! Notifying the team...'
+            emailext (
+                subject: 'Jenkins Build Failed: ${JOB_NAME}',
+                body: 'The Jenkins build ${BUILD_NUMBER} for ${JOB_NAME} has failed. Check logs for details.',
+                to: 'your-email@example.com'
+            )
+        }
+
+        always {
+            echo '🧹 Cleaning up unused Docker images...'
+            sh '''
+            docker system prune -f
+            '''
+        }
+    }
+}
+
+
+Pipeline_3
+
+
+
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'NODEJS-18'
+        maven 'Maven-3.7.8'
+    }
+
+    environment {
+        DOCKER_IMAGE = 'my-img'
+        DOCKERHUB_USER = 'deepanshu12353'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_HUB_PASS = credentials('dockerhub-password')  // Use Jenkins credentials instead of plaintext password
+        KUBERNETES_CREDENTIALS = credentials('kubeconfig-cred')  // Use Jenkins credentials
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/deepanshu1334/your-repo.git'  // Add correct repository URL
+            }
+        }
+
+        stage('package'){
+        steps{
+        sh 'mvn clean packge'
+        }
+        }
+
+        stage('Security Scan') {
+            steps {
+                sh 'npm audit --production'
+            }
+        }
+
+        stage('Lint & Quality Check') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+        
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([string(credentialsId: 'dockerhub-password', variable: 'DOCKER_HUB_PASS')]) {
+                    sh 'echo "$DOCKER_HUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin'
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh '''
+                docker tag ${DOCKER_IMAGE} ${DOCKER_REGISTRY}/${DOCKERHUB_USER}/${DOCKER_IMAGE}:latest
+                docker push ${DOCKER_REGISTRY}/${DOCKERHUB_USER}/${DOCKER_IMAGE}:latest
+                '''
+            }
+        }
+
+        stage('Kubernetes Deployment') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig-cred']) {
+                    sh 'kubectl apply -f k8s-deployment.yml'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build and Deployment Successful!'
+            sh 'docker logout'
+        }
+
+        failure {
+            echo '❌ Build Failed! Check logs for more details.'
+        }
+
+        always {
+            echo '🧹 Cleaning up unused Docker images...'
+            sh 'docker system prune -f'
+        }
+    }
+}
+
+
+
+
+
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.8.7'
+        nodejs 'NODE-16'
+    }
+    stages {
+        stage('Workspace Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repository.git'
+            }
+        }
+        stage('List Files') {
+            steps {
+                sh 'ls -lh'
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh 'npm test'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker pull hello-world'
+            }
+        }
+        stage('Deploy Container') {
+            steps {
+                sh 'docker run hello-world'
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
